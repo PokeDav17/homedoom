@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PROTOCOLLO DOOMSDAY</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Orbitron:wght@600;900&family=Rajdhani:wght@500;750&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: #020503;
+      color: #e0f2e9;
+      font-family: 'Rajdhani', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    /* --- SEZIONE ENIGMI --- */
+    #puzzle-section {
+      width: 90%;
+      max-width: 480px;
+      background: rgba(8, 18, 12, 0.92);
+      border: 1px solid #00ff66;
+      box-shadow: 0 0 30px rgba(0, 255, 102, 0.2);
+      padding: 25px;
+      border-radius: 6px;
+      text-align: center;
+      z-index: 10;
+    }
+    h1 {
+      font-family: 'Orbitron', sans-serif;
+      color: #00ff66;
+      letter-spacing: 3px;
+      font-size: 1.5rem;
+      margin-bottom: 10px;
+      text-shadow: 0 0 10px rgba(0, 255, 102, 0.6);
+    }
+    .subtitle { font-size: 0.95rem; color: #88aa99; margin-bottom: 20px; }
+    .stage {
+      margin-bottom: 15px;
+      padding: 15px;
+      border: 1px solid #1f3a28;
+      background: #060d09;
+      border-radius: 4px;
+      transition: 0.3s;
+    }
+    .stage.locked { opacity: 0.35; pointer-events: none; }
+    .stage.solved { border-color: #00ff66; background: rgba(0, 255, 102, 0.08); }
+    .stage-title { font-weight: 700; color: #00ff66; margin-bottom: 8px; letter-spacing: 1px; }
+    input {
+      width: 70%;
+      padding: 8px 12px;
+      background: #020403;
+      border: 1px solid #00ff66;
+      color: #fff;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 1rem;
+      outline: none;
+    }
+    button {
+      width: 26%;
+      padding: 8px;
+      background: #00ff66;
+      color: #050a06;
+      border: none;
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 900;
+      cursor: pointer;
+    }
+    button:hover { background: #33ff85; box-shadow: 0 0 10px #00ff66; }
+
+    /* --- SCHERMATA SBLOCCO AUDIO --- */
+    #audio-gate {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: #020503;
+      z-index: 999;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 20px;
+      cursor: pointer;
+    }
+    .pulse-btn {
+      font-family: 'Orbitron', sans-serif;
+      color: #00ff66;
+      border: 1px solid #00ff66;
+      padding: 18px 28px;
+      font-size: 1rem;
+      letter-spacing: 4px;
+      background: rgba(0, 255, 102, 0.06);
+      box-shadow: 0 0 25px rgba(0, 255, 102, 0.35);
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 0.85; }
+      50% { transform: scale(1.03); opacity: 1; box-shadow: 0 0 40px rgba(0, 255, 102, 0.75); }
+    }
+
+    /* --- SEZIONE COUNTDOWN --- */
+    #countdown-section {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: 
+        radial-gradient(circle, rgba(4, 18, 10, 0.45) 0%, rgba(1, 5, 2, 0.92) 30%),
+        url('glitch.gif') no-repeat center center/cover;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 20px;
+    }
+
+    #countdown-section::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.3) 0px, rgba(0, 0, 0, 0.3) 1px, transparent 1px, transparent 3px);
+      pointer-events: none;
+      z-index: 1;
+    }
+    #countdown-section::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 12vh;
+      background: linear-gradient(to bottom, transparent, rgba(0, 255, 102, 0.08), transparent);
+      animation: scanbar 6s linear infinite;
+      pointer-events: none;
+      z-index: 1;
+    }
+    @keyframes scanbar {
+      0% { top: -15vh; }
+      100% { top: 110vh; }
+    }
+
+    .marvel-top-title {
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 700;
+      font-size: clamp(0.9rem, 2vw, 1.3rem);
+      letter-spacing: 0.45em;
+      color: #b5e6c8;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+      z-index: 2;
+      text-shadow: 0 0 12px rgba(0, 255, 102, 0.6);
+    }
+
+    .marvel-clock {
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      gap: clamp(6px, 2vw, 24px);
+      z-index: 2;
+      animation: clockGlitch 4.5s infinite;
+    }
+    .unit-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: clamp(50px, 13vw, 130px);
+    }
+    .digits {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(3.4rem, 11vw, 8.5rem);
+      line-height: 0.92;
+      color: #f2fff7;
+      letter-spacing: 2px;
+      text-shadow: 
+        0 0 18px rgba(0, 255, 120, 0.55),
+        0 0 40px rgba(0, 180, 80, 0.35),
+        2px 0 1px rgba(255, 0, 60, 0.4),
+        -2px 0 1px rgba(0, 255, 150, 0.4);
+      font-variant-numeric: tabular-nums;
+    }
+    .unit-label {
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 700;
+      font-size: clamp(0.6rem, 1.4vw, 0.95rem);
+      letter-spacing: 0.35em;
+      color: #79b893;
+      margin-top: 8px;
+      text-transform: uppercase;
+    }
+    .colon {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(3rem, 9.5vw, 7.2rem);
+      line-height: 0.85;
+      color: #d8f5e3;
+      text-shadow: 0 0 15px rgba(0, 255, 120, 0.5);
+      opacity: 0.85;
+    }
+
+    .marvel-bottom-sub {
+      margin-top: 32px;
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 700;
+      font-size: clamp(0.85rem, 1.8vw, 1.2rem);
+      letter-spacing: 0.4em;
+      color: #8ab89c;
+      text-transform: uppercase;
+      z-index: 2;
+      text-shadow: 0 0 10px rgba(0, 255, 102, 0.4);
+    }
+
+    @keyframes clockGlitch {
+      0%, 91%, 94%, 97%, 100% { transform: translate(0, 0); filter: none; }
+      92% { transform: translate(-4px, 1px) skewX(6deg); filter: brightness(1.4); }
+      93% { transform: translate(4px, -1px) skewX(-6deg); }
+      95% { transform: translate(-2px, 0); filter: hue-rotate(30deg); }
+    }
+
+    /* --- SEQUENZA CINEMATOGRAFICA OLOGRAFICA --- */
+    #spider-intro {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle, #050f08 0%, #010402 90%);
+      z-index: 99999;
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 30px;
+    }
+    #spider-intro.active {
+      display: flex;
+    }
+
+    .story-line {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: clamp(1.2rem, 3.2vw, 2.1rem);
+      font-weight: 600;
+      color: #e0f2e9;
+      letter-spacing: 3px;
+      margin-bottom: 18px;
+      opacity: 0;
+      transform: translateY(15px);
+      transition: opacity 1.8s ease-in, transform 1.8s ease-out;
+      text-shadow: 0 0 15px rgba(0, 255, 102, 0.6);
+    }
+    .story-line.show { 
+      opacity: 1; 
+      transform: translateY(0);
+    }
+
+    /* Stile super epico olografico per la frase finale glitchata */
+    .story-line-glitch {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(1.1rem, 2.8vw, 1.8rem);
+      font-weight: 900;
+      color: #00ff66;
+      letter-spacing: 4px;
+      margin-top: 35px;
+      opacity: 0;
+      transform: scale(0.9);
+      transition: opacity 1s ease, transform 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      text-shadow: 0 0 25px rgba(0, 255, 102, 0.8), 2px 0 2px #ff0040;
+    }
+    .story-line-glitch.show {
+      opacity: 1;
+      transform: scale(1);
+      animation: holoPulse 1.5s infinite alternate, textGlitchEffect 0.2s infinite;
+    }
+
+    .glitch-name {
+      color: #ff0040;
+      letter-spacing: 6px;
+      background: rgba(0, 255, 102, 0.15);
+      border: 1px dashed #ff0040;
+      padding: 2px 10px;
+    }
+
+    @keyframes textGlitchEffect {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      20% { transform: translate(-3px, 1px) skewX(-5deg); filter: blur(0.6px); }
+      40% { transform: translate(3px, -1px) skewX(5deg); }
+      60% { transform: translate(-1px, -2px); }
+      80% { transform: translate(2px, 2px); }
+    }
+
+    @keyframes holoPulse {
+      0% { text-shadow: 0 0 15px rgba(0, 255, 102, 0.5), 2px 0 2px #ff0040; }
+      100% { text-shadow: 0 0 35px rgba(0, 255, 102, 1), -2px 0 3px #ff0040; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- SCHERMATA SBLOCCO AUDIO -->
+  <div id="audio-gate" onclick="enterCountdownWithAudio()">
+    <div class="pulse-btn">[ TOCCA PER CONNETTERTI AL SEGNALE ]</div>
+  </div>
+
+  <!-- SEQUENZA CINEMATOGRAFICA OLOGRAFICA -->
+  <div id="spider-intro">
+    <div class="story-line" id="s1">"Tutti i grandi eroi hanno la loro origin story"</div>
+    <div class="story-line" id="s2">"Sei pronto?"</div>
+    <div class="story-line" id="s3">"La tua comincerà presto"</div>
+    <div class="story-line-glitch" id="s4"><span class="glitch-name">▓█▒_N_█▒▓█_7X</span> salverà tutti in Avengers: Doomsday</div>
+  </div>
+
+  <!-- SEZIONE PUZZLE -->
+  <div id="puzzle-section">
+    <h1>PROTOCOLLO MCU</h1>
+    <p class="subtitle" id="login-subtitle">Inserisci i codici giornalieri per decriptare il file finale.</p>
+
+    <div class="stage" id="stage-1">
+      <div class="stage-title">FASE 1 // DISPOSITIVO STARK</div>
+      <input type="text" id="ans-1" placeholder="Codice Fase 1...">
+      <button onclick="checkAnswer(1)">OK</button>
+    </div>
+
+    <div class="stage locked" id="stage-2">
+      <div class="stage-title">FASE 2 // ENDGAME</div>
+      <input type="text" id="ans-2" placeholder="Codice Fase 2...">
+      <button onclick="checkAnswer(2)">OK</button>
+    </div>
+
+    <div class="stage locked" id="stage-3">
+      <div class="stage-title">FASE 3 // PROTOCOLLO RAGNO</div>
+      <input type="text" id="ans-3" placeholder="Codice Fase 3...">
+      <button onclick="checkAnswer(3)">OK</button>
+    </div>
+
+    <div class="stage locked" id="stage-4">
+      <div class="stage-title">FASE 4 // INCURSIONE FINALE</div>
+      <input type="text" id="ans-4" placeholder="Codice Fase 4...">
+      <button onclick="checkAnswer(4)">OK</button>
+    </div>
+  </div>
+
+  <!-- SEZIONE COUNTDOWN -->
+  <div id="countdown-section">
+    <div class="marvel-top-title">IL CONTO ALLA ROVESCIA È INIZIATO</div>
+
+    <div class="marvel-clock">
+      <div class="unit-block">
+        <span class="digits" id="months">00</span>
+        <span class="unit-label">MESI</span>
+      </div>
+      <div class="colon">:</div>
+      <div class="unit-block">
+        <span class="digits" id="days">00</span>
+        <span class="unit-label">GIORNI</span>
+      </div>
+      <div class="colon">:</div>
+      <div class="unit-block">
+        <span class="digits" id="hours">00</span>
+        <span class="unit-label">ORE</span>
+      </div>
+      <div class="colon">:</div>
+      <div class="unit-block">
+        <span class="digits" id="minutes">00</span>
+        <span class="unit-label">MINUTI</span>
+      </div>
+      <div class="colon">:</div>
+      <div class="unit-block">
+        <span class="digits" id="seconds">00</span>
+        <span class="unit-label">SECONDI</span>
+      </div>
+    </div>
+
+    <div class="marvel-bottom-sub">Non premere 'D'</div>
+
+    <audio id="doom-audio" src="./tick.mp3" loop preload="auto"></audio>
+  </div>
+
+  <audio id="spider-theme-audio" src="./spider.mp3" preload="auto"></audio>
+
+  <script>
+    const answers = {
+      1: ["reattore arc", "arc reactor", "arc", "dc"],
+      2: ["3000", "14000605", "dc"],
+      3: ["karen", "dc"],
+      4: ["doom", "dottor destino", "victor von doom", "dr doom", "dc"]
+    };
+
+    const targetDate = new Date("2026-12-25T00:00:00");
+    let currentProgress = parseInt(localStorage.getItem("mcu_progress")) || 1;
+    let countdownInterval = null;
+    let isCountdownActive = false;
+
+    function playMp3() {
+      const mp3 = document.getElementById("doom-audio");
+      mp3.volume = 1.0;
+      mp3.play().catch((err) => {});
+    }
+
+    function stopMp3() {
+      const mp3 = document.getElementById("doom-audio");
+      mp3.pause();
+      mp3.currentTime = 0;
+    }
+
+    function checkAnswer(stage) {
+      const input = document.getElementById(`ans-${stage}`).value.trim().toLowerCase();
+      if (answers[stage].includes(input)) {
+        currentProgress = stage + 1;
+        localStorage.setItem("mcu_progress", currentProgress);
+        if (currentProgress > 4) {
+          enterCountdownWithAudio();
+        } else {
+          updateUI();
+        }
+      } else {
+        alert("ACCESSO NEGATO: Codice errato.");
+      }
+    }
+
+    function enterCountdownWithAudio() {
+      document.getElementById("audio-gate").style.display = "none";
+      document.getElementById("puzzle-section").style.display = "none";
+      document.getElementById("countdown-section").style.display = "flex";
+      isCountdownActive = true;
+      playMp3();
+      startCountdown();
+    }
+
+    // EASTER EGG TASTO 'D'
+    window.addEventListener("keydown", (e) => {
+      if (isCountdownActive && (e.key === 'd' || e.key === 'D')) {
+        triggerOriginStorySequence();
+      }
+    });
+
+    let lastTap = 0;
+    document.getElementById("countdown-section").addEventListener("touchend", (e) => {
+      let currentTime = new Date().getTime();
+      let tapLength = currentTime - lastTap;
+      if (tapLength < 300 && tapLength > 0) {
+        if (isCountdownActive) triggerOriginStorySequence();
+      }
+      lastTap = currentTime;
+    });
+
+    function triggerOriginStorySequence() {
+      isCountdownActive = false;
+      stopMp3();
+      if (countdownInterval) clearInterval(countdownInterval);
+
+      // 1. Nasconde il countdown e fa partire l'audio spider.mp3
+      document.getElementById("countdown-section").style.display = "none";
+      const spiderAudio = document.getElementById("spider-theme-audio");
+      const intro = document.getElementById("spider-intro");
+      
+      spiderAudio.currentTime = 0;
+      spiderAudio.play().catch((err) => {});
+
+      intro.classList.add("active");
+
+      const s1 = document.getElementById("s1");
+      const s2 = document.getElementById("s2");
+      const s3 = document.getElementById("s3");
+      const s4 = document.getElementById("s4");
+
+      // Reset visivo delle scritte
+      s1.classList.remove("show");
+      s2.classList.remove("show");
+      s3.classList.remove("show");
+      s4.classList.remove("show");
+
+      // TEMPISTICHE:
+      setTimeout(() => { s1.classList.add("show"); }, 300);
+      setTimeout(() => { s2.classList.add("show"); }, 3200);
+      setTimeout(() => { s3.classList.add("show"); }, 6000);
+      setTimeout(() => { s4.classList.add("show"); }, 8500);
+    }
+
+    function updateUI() {
+      isCountdownActive = false;
+      if (currentProgress > 4) {
+        document.getElementById("puzzle-section").style.display = "none";
+        document.getElementById("audio-gate").style.display = "flex";
+        return;
+      }
+
+      for (let i = 1; i <= 4; i++) {
+        const el = document.getElementById(`stage-${i}`);
+        const inp = document.getElementById(`ans-${i}`);
+        if (i < currentProgress) {
+          el.classList.remove("locked");
+          el.classList.add("solved");
+          inp.value = "DECRIPTATO";
+          inp.disabled = true;
+        } else if (i === currentProgress) {
+          el.classList.remove("locked");
+        }
+      }
+    }
+
+    function startCountdown() {
+      if (countdownInterval) clearInterval(countdownInterval);
+      
+      const tick = () => {
+        const now = new Date();
+        const diff = targetDate.getTime() - now.getTime();
+
+        if (diff <= 0) {
+          document.querySelector(".marvel-top-title").innerText = "IL MOMENTO È ARRIVATO";
+          return;
+        }
+
+        let months = (targetDate.getFullYear() - now.getFullYear()) * 12 + (targetDate.getMonth() - now.getMonth());
+        let tempDate = new Date(now.getTime());
+        tempDate.setMonth(tempDate.getMonth() + months);
+
+        if (tempDate.getTime() > targetDate.getTime()) {
+          months--;
+          tempDate = new Date(now.getTime());
+          tempDate.setMonth(tempDate.getMonth() + months);
+        }
+
+        const rem = targetDate.getTime() - tempDate.getTime();
+        const days = Math.floor(rem / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((rem % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((rem % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((rem % (1000 * 60)) / 1000);
+
+        document.getElementById("months").innerText = String(months).padStart(2, '0');
+        document.getElementById("days").innerText = String(days).padStart(2, '0');
+        document.getElementById("hours").innerText = String(hours).padStart(2, '0');
+        document.getElementById("minutes").innerText = String(minutes).padStart(2, '0');
+        document.getElementById("seconds").innerText = String(seconds).padStart(2, '0');
+      };
+
+      tick();
+      countdownInterval = setInterval(tick, 1000);
+    }
+
+    updateUI();
+  </script>
+</body>
+</html>
